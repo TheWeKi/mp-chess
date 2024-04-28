@@ -1,17 +1,20 @@
-import express from 'express';
+import { WebSocketServer } from "ws";
 
-import { errorMiddleware } from './src/middlewares/error.middleware.js';
+const ws = new WebSocketServer({
+    port: process.env.PORT || 8080,
+});
 
-import { helloRouter } from './src/routes/hello.route.js';
+import { GameManager } from "./src/GameManager.js";
 
-const app = express();
+const gameManager = new GameManager();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+ws.on("connection", (socket) => {
 
+    gameManager.addUser(socket);
 
-app.use('/api/v1', helloRouter);
+    socket.on("disconnect", () => {
+        gameManager.removeUser(socket);
+    });
+});
 
-app.use(errorMiddleware);
-
-export { app };
+export { ws };
